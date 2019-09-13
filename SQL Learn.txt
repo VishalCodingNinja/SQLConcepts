@@ -1,0 +1,170 @@
+create database sample1
+Alter database sample1 modify name =notasample
+
+--MDF file (actual data)
+--LDF file (used to recover the database)
+
+Execute sp_renameDB 'notasample','sampledb'
+--so when we are deleting a database its mdf and ldf file will also will be deleted behind the sceens
+--can not drop database if its in use
+--so to save ourself from this we need to put database to single user mode
+alter database sampledb set single_user with rollback immediate
+alter database sampledb set multi_user with rollback immediate
+
+use sampledb
+create table tblPerson
+(
+id int not null primary key,
+name varchar(20) not null,
+Email varchar(50) not null,
+GenderId int 
+)
+create table tblGender
+(
+id int not null primary key,
+gender varchar(10) 
+)
+
+--primary and foreign key helps us to implement data constraints
+
+alter table tblPerson add constraint tblPerson_GenderID_FK
+Foreign key (GenderId) references tblgender(ID)
+-- default constraint 
+alter table tblPerson
+add  constraint tblPerson_const_dc 
+default 3 for genderid 
+
+-- if we explicitly give null value then it will take null
+alter table tblperson 
+drop constraint tblPerson_const_dc
+
+--alter table tablename
+--add columnname datatype null|not null
+--default defaultvalue for existing_column_name
+
+-- if you have some foreign key in table(tblperson) and try to delete second table(tblGender) by default value of stored procedure is set to delete and update no action 
+-- then while deleting it will throw the error.
+-- options when setting up cascading referential integrity constraint:
+-- No Action(default),Cascade,Set Null,Set Default
+
+
+--  a constraint is just a boolean value
+use sampledb 
+alter table tblperson
+add Age int not null
+
+alter table tblperson 
+add constraint CK_tblperson check(AGE>0 AND AGE < 150)
+
+
+--identity coulumn
+
+
+
+-- Identity column(we need value of this coulumn automatically incremented)
+-- identity seed(start value) , Identity increment(value that has to be incremented)
+-- to reuse the values we need to turn the IDENTITY_INSERT_ON and supply the values while querying-- SET IDENTITY_INSERT tblperson ON
+
+--Once inserted turned it off(IDENTITY_INSERT)
+--create table tblPerson1
+--(
+--PersonId int identity(1,1) Primary Key,
+--Name nvarchar(20)
+--)
+
+
+--Reset value for identity column
+-- DBCC CHECKIDENT(tblPerson1,RESEED,0)
+
+-- Get last generated identity column value
+-- 1. Select SCOPE_IDENTITY()
+-- 2. Select @@IDENTITY
+-- 
+
+create table test1
+(
+Id int identity(1,1) primary key,
+name varchar(50)
+)
+
+create table test2
+(
+Id int identity(1,1) primary key,
+name varchar(50)
+)
+
+create Trigger trForInsert on Test1 for Insert 
+as 
+begin
+Insert into  test2 Values('YYYY')
+End
+
+select * from test1
+select * from test2
+
+insert into test1 values('XCVB')
+-- So SCOPE_IDENTITY - same session and same scope
+-- @@IDENTITY -same session and across any scope.
+
+-- IDENT_CURRENT('TableName') - Specific table across any sesson and any scope.
+-- Unique Identity Table
+-- a table can have more than one unique key constraint
+-- when to use these ,when we want to enforce uniqueness on 2 or more columns then we use unique key constraint.
+-- Primary will not allow null ,Unique will allow one null.
+ALter table tblPerson 
+Add Constraint UQ_tblPerson_Email Unique(Email);
+-- Alter Table tblPerson drop constraint UQ_tblPerson_Email
+-- using full qualified table name we can execute from any where .
+-- select DISTINCT city from tblPerson
+-- <> or != (not equal to )
+-- select * from tblPerson where Age In (20,32,29) 
+-- IN() - to specify list of values
+-- BETWEEN specify a range 
+-- LIKE specify a pattern
+-- NOT not in a list ,range
+
+-- select * from tblPerson Where Age Between 20 and 25
+-- Select * from tblPerson WHere Age Between 20 and 25
+-- select * from tblPerson Where Age Between 20 and 25
+
+select * from Customer where ID between 1 and 20000
+
+select * from Customer Where City  like '_erli_'
+-- _ (this symbol is used for specific characters)
+-- name should start with mst
+select * from customer where firstname like '[Vi]%'
+select * from customer where firstname like '[^Vi]%'
+select * from dbo.customer where (City='Berlin' or City='London') and Id<>1
+
+select * from customer order by country ,Id asc
+select top(100)  * from customer
+select top 10 percent * from customer
+
+select top(1) * from customer order by id desc
+-- Group By:
+select MAX(ID) from customer
+select min(id) from customer
+select top(5) * from customer order by id desc
+-- group by always used as conjunction with one or more aggregate functions.
+select city ,sum(id) as totalIdSum
+from customer group by city
+-- Note : instead of id we should have salary ,my table was not having salary so thats y i have used id for POC
+select * from customer
+
+select city , sum(salary)
+from tblPerson
+group by city 
+select * from tblPerson
+
+select City, GenderId,Sum(salary) as totalSalary
+from tblPerson
+Group by City,GenderId
+order by city
+
+-- for performance reason we should use column name not *
+--filter
+select genderid , City,SUM(salary) as TotalSalary , Count(ID) as TOTALEmployees
+from tblPerson
+-- where GenderId=1 //aggregations are done for all table
+Group by genderid,city
+having genderid =2
