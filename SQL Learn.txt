@@ -168,3 +168,156 @@ from tblPerson
 -- where GenderId=1 //aggregations are done for all table
 Group by genderid,city
 having genderid =2
+
+
+select City,SUM(ID) as Salary from Customer
+group by City -- Either City should be part of Table or group by clause else we will get this error
+
+
+select * from Customer
+select City,Country,SUM(id) as [salary HM] from Customer 
+group by City,Country
+order by city desc
+
+-- can use aggregrate function in Having clouse but not in group clouse
+-- JOIN:
+-- Left join 
+-- right join
+-- cross join
+-- Inner join
+-- Inner join
+select FirstName,LastName 
+from Customer
+INNER JOIN OrderItem
+ON OrderItem.Id=Customer.ID
+
+select FirstName,LastName 
+from Customer
+LEFT JOIN OrderItem
+ON OrderItem.Id=Customer.ID
+
+select FirstName,LastName 
+from Customer
+RIGHT JOIN OrderItem
+ON OrderItem.Id=Customer.ID
+
+
+
+
+select FirstName,LastName 
+from Customer
+FULL JOIN OrderItem
+ON OrderItem.Id=Customer.ID
+
+select firstName from customer 
+cross join OrderItem
+-- Advance Joins:
+-- Self join:
+ select * from Customer
+
+ select E.FirstName As EmployeeName , M.FirstName AS MName 
+ from Customer E
+ Left join  Customer M
+ ON E.City=M.City
+
+
+ -- replace null value:
+ select FirstName, ISNULL('Martín','No Manager :(') from Customer
+insert into test1 values(null);
+select * from test1
+ select ISNULL(name,'No Manager :(') from test1;
+
+ -- coalesce
+-- its usage is much simiar to isnull function
+-- Case 
+CASE When expression then '' else '' end;
+-- union is slower than union all
+-- while executing uninonthe column should be equal even order should be equal
+-- union join rows
+-- Stored Procedure 
+create procedure spGetEmployees
+as 
+begin
+ select FirstName , lastname from customer
+end
+ ---  spGetEmployees
+ select * from Customer
+ create proc spGetCustomers
+ @name nvarchar(20),
+ @city nvarchar(20)
+ as 
+ begin 
+ select * from customer where FirstName=@name and city=@city
+ end
+ exec spGetCustomers Maria,Berlin
+ exec spGetCustomers @city=Berlin,@name=Maria
+
+
+sp_helptext spGetCustomers
+
+-- update to update the procedure
+-- drop procedure procname
+
+ create proc spGetCustomers1
+ @name nvarchar(20),
+ @city nvarchar(20)
+-- encryption WITH Encryption
+ as 
+ begin 
+ select * from customer where FirstName=@name and city=@city
+ end
+ exec spGetCustomers Maria,Berlin
+ exec spGetCustomers @city=Berlin,@name=Maria
+
+ sp_helptext spGetCustomers1
+
+ -- stored procedure with output variables
+
+ create procedure spGetEmployeeCountGender
+ @City nvarchar(20),
+ @EmployeeCount int output 
+ as 
+ begin 
+	select @EmployeeCount= count(ID) from Customer where City=@City
+end
+
+
+declare @EmployeeCount int
+
+exec spGetEmployeeCountGender 'London',@EmployeeCount output
+print @EmployeeCount
+
+sp_help spGetEmployeeCountGender
+sp_help customer
+-- sp_help works with every thing
+
+-- or we can do alt+F1 to view all the things
+
+
+
+
+-- sp_depends Customer
+-- sp_depends can be used with everything i.e tables ,storedprocedure
+-- when we execute sp it will return 0 or 1 which represent the sucess or failure
+
+create procedure spGetName1
+@City varchar
+as 
+begin
+ return(select firstName from customer where City=@City);
+ end
+
+ declare @name varchar(20)
+ execute @name = spGetName1 @city='Berlin'
+ Print @name
+
+ -- return value we can use only for integer 
+
+
+ -- Advantage of storage procedure 
+ --1. Execution plan retention and resuability
+ --2. Reduces network traffic
+ --3. code reusability and better maintainability
+ --4. Better security
+ --5. Avoids SQL injection attack
+
